@@ -1,16 +1,15 @@
 # 🏭 IoT Sensor Data Pipeline & Dashboard
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458?style=for-the-badge&logo=pandas&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-5.18%2B-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Production--Ready-success?style=for-the-badge)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://iotdatapipeline.streamlit.app/)
 
 A production-grade Data Engineering solution designed for the ingestion, validation, and analysis of high-frequency IoT sensor telemetry. This project demonstrates a resilient ETL pipeline capable of handling sparse time-series data, enforcing strict schema contracts, and delivering real-time operational intelligence via an interactive dashboard.
 
 ---
 
-## Table of Contents
+## 📖 Table of Contents
 - [System Overview](#-system-overview)
 - [Architecture](#-architecture)
 - [Technical Implementation](#-technical-implementation)
