@@ -1,0 +1,27 @@
+2026-01-19 02:00:58,839 - INFO - Successfully loaded 25 rows.
+2026-01-19 02:00:58,840 - INFO - Starting data cleaning...
+2026-01-19 02:00:58,896 - INFO - Missing values before cleaning:
+temperature_celsius    1
+humidity_percent       1
+dtype: int64
+2026-01-19 02:00:59,096 - INFO - Validating sensor ranges...
+2026-01-19 02:00:59,267 - INFO - Running anomaly detection...
+2026-01-19 02:00:59,278 - WARNING - Detected 2 anomalies!
+2026-01-19 02:00:59,320 - WARNING - 
+             timestamp   device_id  temperature_celsius  battery_level_percent      anomaly_type
+6  2023-01-01 09:03:00  sensor_001                36.56                     78  High Temperature
+16 2023-01-01 10:41:00  sensor_001                13.00                     10       Low Battery
+2026-01-19 02:00:59,320 - INFO - Aggregating daily statistics...
+2026-01-19 02:00:59,390 - INFO - Daily Aggregated Statistics:
+    device_id        date  daily_avg_temp  daily_avg_humidity  daily_min_battery
+0  sensor_001  2023-01-01          22.820              54.364                 10
+1  sensor_002  2023-01-01          22.862              54.554                 65
+2  sensor_003  2023-01-01          22.260              55.666                 67
+3  sensor_004  2023-01-01          21.900              56.420                 80
+4  sensor_005  2023-01-01          21.792              54.798                 93
+2026-01-19 02:00:59,390 - INFO - Generating visualization...
+2026-01-19 02:01:01,130 - INFO - Visualization saved to daily_temperature_plot.png
+2026-01-19 02:01:01,801 - INFO - Battery visualization saved to daily_battery_plot.png
+2026-01-19 02:01:01,805 - INFO - Loading data to storage (Parquet)...
+2026-01-19 02:01:02,203 - INFO - Data saved to 'processed_data' directory (Partitioned by Date)
+2026-01-19 02:01:02,203 - INFO - Pipeline completed successfully.
