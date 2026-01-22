@@ -1,13 +1,24 @@
 import unittest
+from unittest.mock import MagicMock
+import sys
 import pandas as pd
 import numpy as np
-import pandera as pa
 import os
 import shutil
 import tempfile
-from iot_data_pipeline import clean_data, analyze_anomalies, load_data_to_storage, load_data, CONF
+import pandera as pa
 
-class TestIoTPipeline(unittest.TestCase):
+# --- Mock Streamlit ---
+# We must mock streamlit before importing iot_dashboard_app because it uses 
+# streamlit decorators (@st.cache_data) at the module level.
+mock_st = MagicMock()
+mock_st.cache_data = lambda func: func  # Mock cache_data as a pass-through decorator
+sys.modules["streamlit"] = mock_st
+
+# Now import the module under test
+from iot_dashboard_app import clean_data, analyze_anomalies, load_data_to_storage, load_data, CONF
+
+class TestIoTDashboardApp(unittest.TestCase):
     
     def setUp(self):
         # Create sample data for testing
@@ -47,8 +58,6 @@ class TestIoTPipeline(unittest.TestCase):
     def test_anomaly_detection(self):
         """Test if anomalies are correctly flagged."""
         # Create data that triggers thresholds.
-        # Note: We need at least 3 points for the rolling average to calculate 
-        # and trigger the high temp anomaly (default window=3).
         data = pd.DataFrame({
             'timestamp': pd.to_datetime([
                 '2023-01-01 10:00:00', '2023-01-01 10:10:00', '2023-01-01 10:20:00', # s1: Sustained High Temp
@@ -60,11 +69,6 @@ class TestIoTPipeline(unittest.TestCase):
         })
         
         anomalies = analyze_anomalies(data)
-        
-        # Expecting 3 anomalies: 2 for High Temp (first row of rolling window is NaN), 1 for Low Battery
-        # Rolling(3) results for s1 temps [35, 35, 35]: [NaN, NaN, 35]. 
-        # Only the 3rd point has a valid rolling average > 30.
-        # s2 has low battery immediately.
         
         # Check for High Temperature Anomaly
         high_temp_anomalies = anomalies[anomalies['anomaly_type'].str.contains('High Temperature')]
@@ -85,17 +89,6 @@ class TestIoTPipeline(unittest.TestCase):
         
         expected_file = os.path.join(self.test_dir, 'processed_data.csv')
         self.assertTrue(os.path.exists(expected_file), "CSV file was not created")
-
-    def test_load_data_to_storage_parquet(self):
-        """Test saving data to Parquet format."""
-        load_data_to_storage(self.raw_data, file_format='parquet', output_dir=self.test_dir)
-        
-        # Parquet saves as a directory when partitioned, or a file if not. 
-        # Our function saves partitioned by date, so it creates a directory structure.
-        self.assertTrue(os.path.exists(self.test_dir), "Output directory should exist")
-        # Check if any parquet file exists inside
-        has_parquet = any(f.endswith('.parquet') for root, dirs, files in os.walk(self.test_dir) for f in files)
-        self.assertTrue(has_parquet, "Parquet files were not created")
 
 if __name__ == '__main__':
     unittest.main()

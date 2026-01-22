@@ -52,14 +52,18 @@ graph LR
 *   **Self-Healing:** Uses linear interpolation to recover missing time-series data, ensuring continuity.
 *   **Strict Validation:** Implements `pandera` schemas to enforce data types and value ranges, failing fast on corrupt data.
 *   **Feature Engineering:** Calculates rolling averages, validity windows, and unit conversions.
+*   **Optimized Performance:** Vectorized cleaning operations and Streamlit caching for rapid iteration.
 
 ### 2. Anomaly Detection
 *   **Dynamic Thresholds:** Configurable logic to flag High Temperature and Low Battery events.
+*   **Rolling Window Logic:** Uses 3-point rolling averages to filter out instantaneous spikes and detect sustained anomalies.
 *   **Contextual Analysis:** Identifies anomalies based on multi-variable conditions.
 
 ### 3. Interactive Dashboard
 *   **Real-time Config:** Adjust thresholds via sidebar sliders and see results instantly.
-*   **Rich Visualizations:** Interactive Plotly charts for Temperature, Battery, Humidity, and Heatmaps.
+*   **Data Filtering:** Filter raw data by date range before processing to focus analysis.
+*   **Rich Visualizations:** Interactive Plotly charts including a new Rolling Average Comparison tool.
+*   **Cache Management:** "Clear Cache & Rerun" functionality to force data reloading.
 *   **Drill-Down:** Hover over specific anomalies to investigate root causes.
 
 ### 4. Data Warehousing Strategy
@@ -107,7 +111,7 @@ python iot_data_pipeline.py
 *   **Output:** `processed_data/` (Parquet), `pipeline.log`, and static PNG plots.
 
 ### Option 2: Launch the Dashboard (GUI)
-For an interactive experience, upload your own data and explore it.
+For an interactive experience, upload your own data and explore it. You can run either the modular version or the standalone single-file app.
 
 ```bash
 streamlit run iot_dashboard.py

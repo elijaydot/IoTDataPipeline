@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 from iot_data_pipeline import clean_data, transform_data, analyze_anomalies, aggregate_data, CONF
+from typing import Union, IO
 
 # --- Page Configuration ---
 st.set_page_config(page_title="IoT Sensor Dashboard", layout="wide")
@@ -12,11 +13,23 @@ st.sidebar.header("⚙️ Configuration")
 temp_threshold = st.sidebar.slider("High Temp Threshold (°C)", 0.0, 100.0, CONF.TEMP_THRESHOLD_HIGH)
 battery_threshold = st.sidebar.slider("Low Battery Threshold (%)", 0.0, 100.0, CONF.BATTERY_THRESHOLD_LOW)
 
+if st.sidebar.button("Clear Cache & Rerun"):
+    st.cache_data.clear()
+    st.rerun()
+
 st.title("📊 IoT Sensor Data Pipeline")
 st.markdown("""
 Upload your raw IoT sensor logs (CSV) below. 
 The system will automatically clean the data, check for anomalies, and visualize trends.
 """)
+
+@st.cache_data
+def load_data(file: Union[str, IO]) -> pd.DataFrame:
+    return pd.read_csv(file)
+
+@st.cache_data
+def cached_clean_data(df: pd.DataFrame) -> pd.DataFrame:
+    return clean_data(df)
 
 # --- File Upload Section ---
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -28,7 +41,22 @@ if uploaded_file is not None:
     st.subheader("1. Raw Data Inspection")
     try:
         # Read directly from the uploaded file buffer
-        df_raw = pd.read_csv(uploaded_file)
+        df_raw = load_data(uploaded_file)
+
+        # Ensure timestamp is datetime for filtering
+        if 'timestamp' in df_raw.columns:
+            df_raw['timestamp'] = pd.to_datetime(df_raw['timestamp'])
+            
+            min_date = df_raw['timestamp'].min().date()
+            max_date = df_raw['timestamp'].max().date()
+            
+            st.sidebar.header("📅 Date Filter")
+            date_range = st.sidebar.date_input("Select Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+            
+            if len(date_range) == 2:
+                start_date, end_date = date_range
+                df_raw = df_raw[(df_raw['timestamp'].dt.date >= start_date) & (df_raw['timestamp'].dt.date <= end_date)]
+
         st.write(f"**Loaded {len(df_raw)} rows.**")
         with st.expander("View Raw Data"):
             st.dataframe(df_raw.head())
@@ -40,7 +68,7 @@ if uploaded_file is not None:
     with st.spinner('Running ETL Pipeline...'):
         try:
             # Reuse existing pipeline logic
-            df_clean = clean_data(df_raw)
+            df_clean = cached_clean_data(df_raw)
             df_transformed = transform_data(df_clean)
             anomalies = analyze_anomalies(df_transformed, temp_threshold=temp_threshold, battery_threshold=battery_threshold)
             daily_stats = aggregate_data(df_transformed)
@@ -77,7 +105,7 @@ if uploaded_file is not None:
     # 4. Visualizations
     st.subheader("4. Visualizations")
     
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Temperature Trends", "Battery Health", "Humidity Trends", "Anomaly Analysis", "Heatmap Analysis"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Temperature Trends", "Battery Health", "Humidity Trends", "Anomaly Analysis", "Heatmap Analysis", "Rolling Avg Comparison"])
     
     with tab1:
         st.info("Interactive Daily Average Temperature")
@@ -123,3 +151,21 @@ if uploaded_file is not None:
             labels={'hour_of_day': 'Hour of Day', 'device_id': 'Device', 'temperature_celsius': 'Avg Temp (°C)'}
         )
         st.plotly_chart(fig_heat, use_container_width=True)
+
+    with tab6:
+        st.info("Comparison: Raw Temperature vs. 3-Point Rolling Average")
+        
+        # Select device to reduce clutter
+        device_list = df_transformed['device_id'].unique()
+        selected_device = st.selectbox("Select Device for Comparison", device_list)
+        
+        subset_df = df_transformed[df_transformed['device_id'] == selected_device]
+        
+        fig_roll = px.line(
+            subset_df, 
+            x='timestamp', 
+            y=['temperature_celsius', 'temp_rolling_avg_3'],
+            title=f"Raw vs. Rolling Average Temperature for {selected_device}",
+            labels={'value': 'Temperature (°C)', 'variable': 'Metric'}
+        )
+        st.plotly_chart(fig_roll, use_container_width=True)
