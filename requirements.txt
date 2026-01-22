@@ -1,8 +1,8 @@
-altair
+altair<6
 matplotlib
 numpy
 pandas
 pandera
 plotly
 pyarrow
-streamlit
+streamlit>=1.40.0
