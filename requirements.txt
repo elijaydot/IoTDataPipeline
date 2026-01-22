@@ -1,7 +1,8 @@
-pandas
-numpy
+altair
 matplotlib
+numpy
+pandas
 pandera
-streamlit
 plotly
 pyarrow
+streamlit
